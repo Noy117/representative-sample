@@ -1,0 +1,510 @@
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>מהו מדגם מייצג?</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Frank+Ruhl+Libre:wght@500;700;900&family=Assistant:wght@400;600;700&family=IBM+Plex+Mono:wght@500&display=swap">
+<style>
+/* Layout: one reading column (~65ch) for prose, wider "lab bench" panels for the simulations; RTL throughout */
+:root{
+  --bg:#f2f4f6; --surface:#ffffff; --ink:#16202b; --muted:#5a6673; --line:#d7dde3; --band:#e9edf1;
+  --yes:#1d6f8c; --no:#c4cbd3; --accent:#cf3f55; --ok:#2f7d4a; --chip:#e4e9ee;
+  --f-display:"Frank Ruhl Libre", "David", Georgia, serif;
+  --f-body:"Assistant", "Segoe UI", Arial, sans-serif;
+  --f-num:"IBM Plex Mono", ui-monospace, Consolas, monospace;
+}
+@media (prefers-color-scheme: dark){:root:not([data-theme="light"]){
+  --bg:#11161c; --surface:#19212a; --ink:#e5e9ee; --muted:#9aa6b2; --line:#2c3642; --band:#1f2832;
+  --yes:#53b3d3; --no:#3b4652; --accent:#f0727f; --ok:#6cc48a; --chip:#26303b; color-scheme:dark}}
+:root[data-theme="dark"]{
+  --bg:#11161c; --surface:#19212a; --ink:#e5e9ee; --muted:#9aa6b2; --line:#2c3642; --band:#1f2832;
+  --yes:#53b3d3; --no:#3b4652; --accent:#f0727f; --ok:#6cc48a; --chip:#26303b; color-scheme:dark}
+
+*{box-sizing:border-box}
+body{background:var(--bg);color:var(--ink);font-family:var(--f-body);font-size:18px;line-height:1.7;direction:rtl}
+.wrap{max-width:1080px;margin:0 auto;padding-inline:20px;padding-block:48px 80px;display:flex;flex-direction:column;gap:64px}
+.prose{max-width:66ch;display:flex;flex-direction:column;gap:14px}
+h1,h2,h3{font-family:var(--f-display);text-wrap:balance;margin:0;line-height:1.2}
+h1{font-size:clamp(2.4rem,6vw,3.8rem);font-weight:900}
+h2{font-size:clamp(1.6rem,3.6vw,2.2rem);font-weight:700}
+h3{font-size:1.2rem;font-weight:700}
+p{margin:0}
+.eyebrow{font-size:.8rem;font-weight:700;letter-spacing:.06em;color:var(--accent)}
+.lede{font-size:1.25rem;color:var(--muted)}
+.num{font-family:var(--f-num);font-variant-numeric:tabular-nums;direction:ltr;unicode-bidi:isolate}
+strong{font-weight:700}
+
+/* Hero */
+header.hero{display:grid;grid-template-columns:1.2fr 1fr;gap:32px;align-items:center}
+.hero-fig{background:var(--surface);border:1px solid var(--line);border-radius:6px;padding:16px}
+.hero-fig canvas{width:100%;display:block}
+.hero-fig figcaption{font-size:.85rem;color:var(--muted);margin-top:8px}
+
+/* Definitions */
+dl.terms{display:grid;grid-template-columns:repeat(auto-fit,minmax(220px,1fr));gap:1px;background:var(--line);border:1px solid var(--line);margin:0}
+dl.terms div{background:var(--surface);padding:18px 20px;display:flex;flex-direction:column;gap:6px}
+dl.terms dt{font-family:var(--f-display);font-weight:700;font-size:1.15rem}
+dl.terms dd{margin:0;color:var(--muted);font-size:1rem;line-height:1.55}
+
+/* Lab panels */
+.lab{background:var(--surface);border:1px solid var(--line);border-radius:8px;padding:24px;display:grid;grid-template-columns:300px minmax(0,1fr);gap:28px}
+.controls{display:flex;flex-direction:column;gap:20px;min-width:0}
+.ctl-label{font-size:.78rem;font-weight:700;letter-spacing:.06em;color:var(--muted);display:block;margin-bottom:8px}
+.chips{display:flex;flex-wrap:wrap;gap:6px}
+.chip{font:inherit;font-size:.95rem;border:1px solid var(--line);background:var(--chip);color:var(--ink);padding:5px 12px;border-radius:999px;cursor:pointer}
+.chip[aria-pressed="true"]{background:var(--ink);color:var(--surface);border-color:var(--ink)}
+.chip:focus-visible,.btn:focus-visible,input:focus-visible,.qbtn:focus-visible{outline:2px solid var(--accent);outline-offset:2px}
+.method-note{font-size:.95rem;color:var(--muted);line-height:1.55;min-height:4.6em}
+input[type=range]{width:100%;accent-color:var(--yes)}
+.range-row{display:flex;justify-content:space-between;align-items:baseline}
+.btn{font:inherit;font-weight:700;background:var(--yes);color:var(--surface);border:0;border-radius:6px;padding:10px 16px;cursor:pointer}
+.btn.ghost{background:transparent;color:var(--ink);border:1px solid var(--line)}
+.btn-row{display:flex;gap:8px;flex-wrap:wrap}
+.stage{min-width:0;display:flex;flex-direction:column;gap:16px}
+.stage canvas{width:100%;display:block}
+.legend{display:flex;flex-wrap:wrap;gap:16px;font-size:.88rem;color:var(--muted)}
+.legend span{display:inline-flex;align-items:center;gap:6px}
+.sw{width:11px;height:11px;border-radius:50%;display:inline-block}
+.sw.ring{background:transparent;border:2px solid var(--ink)}
+
+.readout{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:1px;background:var(--line);border:1px solid var(--line);border-radius:6px;overflow:hidden}
+.readout div{background:var(--surface);padding:10px 14px}
+.readout .k{font-size:.8rem;color:var(--muted);display:block}
+.readout .v{font-family:var(--f-num);font-size:1.45rem;font-variant-numeric:tabular-nums}
+.v.bad{color:var(--accent)} .v.good{color:var(--ok)}
+
+.comp{display:flex;flex-direction:column;gap:8px}
+.comp-row{display:grid;grid-template-columns:120px minmax(0,1fr);gap:10px;align-items:center;font-size:.92rem}
+.bars{display:flex;flex-direction:column;gap:3px}
+.bar{height:9px;border-radius:2px;background:var(--no);position:relative}
+.bar.s{background:var(--ink)}
+.bar-val{font-family:var(--f-num);font-size:.75rem;color:var(--muted)}
+.bar-line{display:grid;grid-template-columns:minmax(0,1fr) 44px;gap:8px;align-items:center}
+
+.callout{border-inline-start:3px solid var(--accent);padding-inline-start:16px;color:var(--ink)}
+
+/* Margin of error table */
+.tbl-wrap{overflow-x:auto}
+table{border-collapse:collapse;font-size:1rem;min-width:420px}
+th,td{padding:8px 14px;border-bottom:1px solid var(--line);text-align:right}
+th{font-size:.8rem;color:var(--muted);letter-spacing:.04em}
+td.num{text-align:left}
+
+/* History */
+.history{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1fr);gap:32px;align-items:start}
+.hbars{display:flex;flex-direction:column;gap:14px;background:var(--surface);border:1px solid var(--line);border-radius:8px;padding:20px}
+.hb{display:flex;flex-direction:column;gap:4px;font-size:.92rem}
+.hb .track{height:22px;background:var(--band);border-radius:3px;position:relative;overflow:hidden}
+.hb .fill{position:absolute;inset-block:0;inset-inline-start:0;display:flex;align-items:center;padding-inline:8px;font-family:var(--f-num);font-size:.8rem;color:var(--surface)}
+.hb .meta{color:var(--muted);font-size:.82rem}
+
+/* Checklist & quiz */
+.checks{display:grid;grid-template-columns:repeat(auto-fit,minmax(240px,1fr));gap:20px}
+.check{display:flex;flex-direction:column;gap:6px;padding-top:12px;border-top:2px solid var(--ink)}
+.check p{color:var(--muted);font-size:1rem;line-height:1.55}
+.quiz{display:flex;flex-direction:column;gap:12px}
+.q{background:var(--surface);border:1px solid var(--line);border-radius:8px;padding:16px 20px;display:flex;flex-direction:column;gap:10px}
+.qbtns{display:flex;gap:8px;flex-wrap:wrap}
+.qbtn{font:inherit;font-size:.95rem;border:1px solid var(--line);background:var(--chip);color:var(--ink);border-radius:6px;padding:4px 14px;cursor:pointer}
+.qbtn.right{background:var(--ok);color:var(--surface);border-color:var(--ok)}
+.qbtn.wrong{background:var(--accent);color:var(--surface);border-color:var(--accent)}
+.qexp{font-size:.98rem;color:var(--muted)}
+.score{font-family:var(--f-num);color:var(--muted);font-size:.95rem}
+
+footer{color:var(--muted);font-size:.9rem;border-top:1px solid var(--line);padding-top:16px}
+
+@media (max-width:820px){
+  .lab{grid-template-columns:minmax(0,1fr);padding:16px}
+  header.hero,.history{grid-template-columns:minmax(0,1fr)}
+  .method-note{min-height:0}
+}
+@media (max-width:480px){
+  body{font-size:17px}
+  .wrap{padding-inline:16px}
+  .readout .v{font-size:1.15rem}
+  .comp-row{grid-template-columns:86px minmax(0,1fr)}
+}
+</style>
+
+<main class="wrap">
+
+<header class="hero">
+  <div class="prose">
+    <span class="eyebrow">סטטיסטיקה · מושג יסוד</span>
+    <h1>מהו מדגם מייצג?</h1>
+    <p class="lede">אי אפשר לשאול את כולם. לכן שואלים חלק קטן, ומקווים שהוא מספר את הסיפור של השלם. מדגם מייצג הוא חלק שבאמת עושה את זה.</p>
+    <p>בדף הזה תבנו מדגמים בעצמכם מתוך עיר דמיונית של <span class="num">1,200</span> תושבים, ותראו מתי התשובה מתקרבת לאמת ומתי היא מתרחקת ממנה, גם כשהמדגם ענק.</p>
+  </div>
+  <figure class="hero-fig" style="margin:0">
+    <canvas id="heroCanvas" aria-label="המחשה: אוכלוסייה של נקודות, ומתוכה מדגם קטן מסומן"></canvas>
+    <figcaption>כל נקודה היא אדם. הנקודות המסומנות בטבעת הן המדגם.</figcaption>
+  </figure>
+</header>
+
+<section class="prose" aria-labelledby="t-terms">
+  <h2 id="t-terms">ארבעה מושגים לפני שמתחילים</h2>
+  <p>כשסוקרים שואלים <span class="num">500</span> איש למי יצביעו, הם רוצים לדעת מה יעשו מיליוני מצביעים. ההצלחה תלויה בשאלה אחת: האם ה-<span class="num">500</span> דומים לכלל המצביעים בכל מה שמשפיע על התשובה?</p>
+</section>
+<dl class="terms" style="margin-top:-40px">
+  <div><dt>אוכלוסייה</dt><dd>כל הפרטים שעליהם רוצים להסיק מסקנה. למשל, כל תלמידי התיכון בישראל.</dd></div>
+  <div><dt>מדגם</dt><dd>תת-קבוצה של האוכלוסייה שאותה בודקים בפועל.</dd></div>
+  <div><dt>מדגם מייצג</dt><dd>מדגם שהרכבו דומה להרכב האוכלוסייה בתכונות הרלוונטיות, כך שהתוצאה בו קרובה לתוצאה באוכלוסייה.</dd></div>
+  <div><dt>פרמטר וסטטיסטי</dt><dd>פרמטר הוא הערך האמיתי באוכלוסייה. סטטיסטי הוא הערך שמחושב מהמדגם ומשמש לאמוד אותו.</dd></div>
+</dl>
+
+<section style="display:flex;flex-direction:column;gap:20px" aria-labelledby="t-sim1">
+  <div class="prose">
+    <span class="eyebrow">סימולציה 1</span>
+    <h2 id="t-sim1">סקר בעיר: האם להקים פארק חדש?</h2>
+    <p>בעיר יש ארבע שכונות, ובכל אחת שיעור תמיכה אחר בפארק. בסטודנטים התמיכה גבוהה, ברמת הוותיקים נמוכה. אתם יודעים את התשובה האמיתית. הסוקר לא יודע. בחרו שיטת דגימה וגודל מדגם, ובדקו כמה קרוב הוא מגיע.</p>
+  </div>
+  <div class="lab">
+    <div class="controls">
+      <div>
+        <span class="ctl-label" id="m1-label">שיטת דגימה</span>
+        <div class="chips" role="group" aria-labelledby="m1-label" id="m1"></div>
+      </div>
+      <p class="method-note" id="m1-note"></p>
+      <div>
+        <div class="range-row"><label class="ctl-label" for="n1">גודל המדגם</label><span class="num" id="n1-val"></span></div>
+        <input type="range" id="n1" min="10" max="300" step="10" value="60">
+      </div>
+      <div class="btn-row">
+        <button class="btn" id="draw1" type="button">דגמו שוב</button>
+      </div>
+      <div class="comp" aria-label="הרכב שכונות: אוכלוסייה מול מדגם">
+        <span class="ctl-label">הרכב לפי שכונה</span>
+        <div id="comp"></div>
+        <div class="legend"><span><i class="sw" style="border-radius:2px;background:var(--no)"></i>באוכלוסייה</span><span><i class="sw" style="border-radius:2px;background:var(--ink)"></i>במדגם</span></div>
+      </div>
+    </div>
+    <div class="stage">
+      <div class="readout">
+        <div><span class="k">תמיכה אמיתית</span><span class="v num" id="r-true"></span></div>
+        <div><span class="k">אומדן מהמדגם</span><span class="v num" id="r-est"></span></div>
+        <div><span class="k">פער</span><span class="v num" id="r-err"></span></div>
+      </div>
+      <canvas id="city" aria-label="מפת העיר: 1,200 תושבים בארבע שכונות"></canvas>
+      <div class="legend">
+        <span><i class="sw" style="background:var(--yes)"></i>תומך בפארק</span>
+        <span><i class="sw" style="background:var(--no)"></i>מתנגד</span>
+        <span><i class="sw ring"></i>נבחר למדגם</span>
+      </div>
+    </div>
+  </div>
+  <p class="prose callout">נסו את דגימת הנוחות עם מדגם של <span class="num">300</span>. הפער לא נעלם, כי כמעט כל מי שנשאל גר ליד הקניון. הגדלת המדגם לא מתקנת שיטה מוטה.</p>
+</section>
+
+<section style="display:flex;flex-direction:column;gap:20px" aria-labelledby="t-sim2">
+  <div class="prose">
+    <span class="eyebrow">סימולציה 2</span>
+    <h2 id="t-sim2">אלף סוקרים, אלף תשובות</h2>
+    <p>מדגם אחד יכול להצליח במקרה. כדי לשפוט שיטה, צריך לראות מה קורה כשחוזרים עליה הרבה פעמים. כאן נריץ <span class="num">1,000</span> מדגמים בשיטה ובגודל שתבחרו, ונצייר היסטוגרמה של האומדנים.</p>
+    <p>שני דברים לחפש: <strong>היכן נמצא מרכז ההיסטוגרמה</strong> ביחס לקו האמת (זו ההטיה), <strong>וכמה היא רחבה</strong> (זו טעות הדגימה המקרית).</p>
+  </div>
+  <div class="lab">
+    <div class="controls">
+      <div>
+        <span class="ctl-label" id="m2-label">שיטת דגימה</span>
+        <div class="chips" role="group" aria-labelledby="m2-label" id="m2"></div>
+      </div>
+      <div>
+        <div class="range-row"><label class="ctl-label" for="n2">גודל כל מדגם</label><span class="num" id="n2-val"></span></div>
+        <input type="range" id="n2" min="10" max="400" step="10" value="30">
+      </div>
+      <div class="btn-row">
+        <button class="btn" id="run2" type="button">הריצו 1,000 מדגמים</button>
+      </div>
+      <p class="method-note">הריצה הקודמת נשארת על הגרף כקו מתאר, כדי שתוכלו להשוות. נסו מדגם של <span class="num">30</span> ואחריו מדגם של <span class="num">300</span>.</p>
+    </div>
+    <div class="stage">
+      <canvas id="hist" aria-label="היסטוגרמה של אומדני התמיכה מ-1,000 מדגמים"></canvas>
+      <div class="legend">
+        <span><i class="sw" style="border-radius:2px;background:var(--yes)"></i>הריצה הנוכחית</span>
+        <span><i class="sw" style="border-radius:2px;background:transparent;border:1.5px solid var(--muted)"></i>הריצה הקודמת</span>
+        <span><i class="sw" style="border-radius:0;width:3px;background:var(--accent)"></i>הערך האמיתי</span>
+      </div>
+      <div class="readout">
+        <div><span class="k">ממוצע האומדנים</span><span class="v num" id="h-mean"></span></div>
+        <div><span class="k">הטיה</span><span class="v num" id="h-bias"></span></div>
+        <div><span class="k">95% מהמדגמים בין</span><span class="v num" id="h-range" style="font-size:1.1rem"></span></div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<section class="prose" aria-labelledby="t-moe">
+  <h2 id="t-moe">כמה גדול צריך להיות המדגם?</h2>
+  <p>במדגם אקראי, טעות הדגימה קטנה ככל שהמדגם גדל, אבל לאט. כדי לחצות אותה בחצי צריך מדגם גדול פי ארבעה. כלל אצבע נפוץ לסקרים: מרווח הטעות ברמת ביטחון של <span class="num">95%</span> הוא בערך <span class="num">1/√n</span>.</p>
+  <div class="tbl-wrap">
+    <table>
+      <thead><tr><th>גודל מדגם</th><th>מרווח טעות משוער</th><th>מה זה אומר</th></tr></thead>
+      <tbody>
+        <tr><td class="num">100</td><td class="num">±10%</td><td>מזהה רק הבדלים גדולים</td></tr>
+        <tr><td class="num">400</td><td class="num">±5%</td><td>סקר בית ספרי טוב</td></tr>
+        <tr><td class="num">1,000</td><td class="num">±3.2%</td><td>סקר בחירות ארצי טיפוסי</td></tr>
+        <tr><td class="num">2,500</td><td class="num">±2%</td><td>סקר גדול ויקר</td></tr>
+      </tbody>
+    </table>
+  </div>
+  <p>שימו לב שגודל האוכלוסייה כמעט לא מופיע בחישוב. מדגם אקראי של <span class="num">1,000</span> איש מספיק כמעט באותה מידה לעיר קטנה ולמדינה שלמה. מה שקובע הוא איך נבחרו האנשים, לא כמה הם מתוך הכלל.</p>
+</section>
+
+<section class="history" aria-labelledby="t-hist">
+  <div class="prose">
+    <span class="eyebrow">מקרה אמיתי · ארה"ב 1936</span>
+    <h2 id="t-hist">2.4 מיליון תשובות שטעו</h2>
+    <p>לקראת הבחירות לנשיאות שלח המגזין <em>Literary Digest</em> כעשרה מיליון גלויות, וקיבל כ-<span class="num">2.4</span> מיליון תשובות. התחזית: אלף לנדון ינצח את פרנקלין רוזוולט בבירור.</p>
+    <p>רשימות התפוצה נלקחו ממנויי המגזין, ממדריכי טלפון ומרשימות בעלי רכב. בזמן השפל הגדול, בעלי טלפון ורכב היו אמידים מהממוצע, ונטו יותר לרפובליקנים. גם מי שטרח לענות לא דמה למי שלא ענה.</p>
+    <p>ג'ורג' גאלופ השתמש במדגם קטן בהרבה, שנבנה כך שיתאים להרכב האוכלוסייה, וחזה נכון את ניצחון רוזוולט. הגודל לא הציל את המגזין. הייצוגיות הצילה את גאלופ.</p>
+  </div>
+  <div class="hbars" aria-label="השוואת תחזיות לתוצאה: אחוז התמיכה ברוזוולט">
+    <span class="ctl-label" style="margin:0">אחוז התמיכה ברוזוולט</span>
+    <div class="hb"><span><strong>Literary Digest</strong></span><div class="track"><div class="fill" style="width:43%;background:var(--accent)">43%</div></div><span class="meta">כ-2.4 מיליון משיבים, מדגם מוטה</span></div>
+    <div class="hb"><span><strong>גאלופ</strong></span><div class="track"><div class="fill" style="width:56%;background:var(--yes)">56%</div></div><span class="meta">כ-50 אלף משיבים, מדגם מתוכנן</span></div>
+    <div class="hb"><span><strong>תוצאת הבחירות</strong></span><div class="track"><div class="fill" style="width:61%;background:var(--ink)">61%</div></div><span class="meta">רוזוולט ניצח ב-46 מתוך 48 מדינות</span></div>
+  </div>
+</section>
+
+<section style="display:flex;flex-direction:column;gap:24px" aria-labelledby="t-bias">
+  <div class="prose">
+    <h2 id="t-bias">איפה מדגמים משתבשים</h2>
+    <p>רוב הכשלים נובעים מכך שלחלק מהאנשים יש סיכוי גבוה יותר להיכנס למדגם, וסיכוי זה קשור לתשובה שלהם.</p>
+  </div>
+  <div class="checks">
+    <div class="check"><h3>דגימת נוחות</h3><p>שואלים את מי שקל להגיע אליו: חברים לכיתה, עוברים בקניון. הם דומים זה לזה יותר מאשר לאוכלוסייה.</p></div>
+    <div class="check"><h3>מדגם מתנדבים</h3><p>סקרי אינטרנט והצבעות SMS. מי שבוחר לענות הוא לרוב בעל דעה חזקה במיוחד.</p></div>
+    <div class="check"><h3>כיסוי חסר</h3><p>חלק מהאוכלוסייה בכלל לא ברשימה שממנה דוגמים, למשל מי שאין לו טלפון קווי.</p></div>
+    <div class="check"><h3>אי-היענות</h3><p>נבחרו נכון, אבל רק חלק ענו. אם מי שלא עונה שונה ממי שעונה, נוצרת הטיה.</p></div>
+  </div>
+  <div class="prose">
+    <h3>ומה עובד</h3>
+    <p><strong>דגימה אקראית פשוטה:</strong> לכל פרט באוכלוסייה סיכוי שווה להיבחר. <strong>דגימת שכבות:</strong> מחלקים את האוכלוסייה לקבוצות (שכונה, גיל, מגזר) ודוגמים באקראי מכל קבוצה לפי גודלה. כך מובטח שההרכב יתאים, ולרוב גם הפיזור קטן יותר. ראיתם את שתיהן בסימולציות למעלה.</p>
+  </div>
+</section>
+
+<section style="display:flex;flex-direction:column;gap:20px" aria-labelledby="t-quiz">
+  <div class="prose">
+    <span class="eyebrow">בדקו את עצמכם</span>
+    <h2 id="t-quiz">מייצג או לא?</h2>
+    <p class="score" id="score">ענית על 0 מתוך 5</p>
+  </div>
+  <div class="quiz prose" id="quiz"></div>
+</section>
+
+<footer>הסימולציות משתמשות באוכלוסייה מומצאת. נתוני 1936 מעוגלים לאחוז השלם הקרוב.</footer>
+</main>
+
+<script>
+(function(){
+const reduce = matchMedia('(prefers-reduced-motion: reduce)').matches;
+const css = n => getComputedStyle(document.documentElement).getPropertyValue(n).trim();
+
+/* ---------- Population ---------- */
+function mulberry32(a){return function(){a|=0;a=a+0x6D2B79F5|0;let t=Math.imul(a^a>>>15,1|a);t=t+Math.imul(t^t>>>7,61|t)^t;return((t^t>>>14)>>>0)/4294967296}}
+const rng = mulberry32(1936);
+const COLS=40, ROWS=30;
+const HOODS=[
+  {name:'מרכז העיר', short:'מרכז', c0:0, c1:10, p:.72},
+  {name:'שכונת הגפן', short:'הגפן', c0:10, c1:22, p:.52},
+  {name:'קריית הסטודנטים', short:'סטודנטים', c0:22, c1:30, p:.86},
+  {name:'רמת הוותיקים', short:'ותיקים', c0:30, c1:40, p:.22},
+];
+const MALL={col:5,row:14};
+const people=[]; const hoodIdx=HOODS.map(()=>[]);
+for(let r=0;r<ROWS;r++)for(let c=0;c<COLS;c++){
+  const h=HOODS.findIndex(H=>c>=H.c0&&c<H.c1);
+  const i=people.length;
+  people.push({c,r,h,yes:rng()<HOODS[h].p});
+  hoodIdx[h].push(i);
+}
+const N=people.length;
+const allIdx=people.map((_,i)=>i);
+const yesArr=new Uint8Array(N); people.forEach((p,i)=>yesArr[i]=p.yes?1:0);
+const TRUTH=people.reduce((s,p)=>s+(p.yes?1:0),0)/N;
+
+const METHODS={
+  random:{label:'אקראית פשוטה', note:'כל אחד מ-1,200 התושבים נכנס להגרלה עם סיכוי שווה. כמו לשלוף פתקים מכובע.'},
+  strat:{label:'שכבות', note:'מכל שכונה נדגמים תושבים באקראי, במספר שמתאים לגודל השכונה. ההרכב לפי שכונה תמיד מדויק.'},
+  conv:{label:'נוחות (קניון)', note:'הסוקר עומד בקניון במרכז העיר ושואל את מי שעובר. מי שגר קרוב נשאל הרבה יותר.'},
+  online:{label:'סקר אינטרנט', note:'קישור לסקר פורסם ברשתות. סטודנטים עונים הרבה, ותיקים מעט, ותומכים נלהבים טורחים לענות יותר.'},
+};
+const W={
+  conv: people.map(p=>Math.exp(-Math.hypot(p.c-MALL.col,p.r-MALL.row)/3.5)),
+  online: people.map(p=>[1,1,3.5,.25][p.h]*(p.yes?1.6:1)),
+};
+function pickRandom(arr,k){const a=arr.slice();for(let i=0;i<k;i++){const j=i+Math.floor(Math.random()*(a.length-i));const t=a[i];a[i]=a[j];a[j]=t}return a.slice(0,k)}
+function alloc(n){
+  const raw=HOODS.map((_,i)=>n*hoodIdx[i].length/N); const k=raw.map(Math.floor);
+  let left=n-k.reduce((a,b)=>a+b,0);
+  raw.map((v,i)=>[v-k[i],i]).sort((a,b)=>b[0]-a[0]).slice(0,left).forEach(([,i])=>k[i]++);
+  return k;
+}
+const keys=new Float64Array(N);
+function sample(method,n){
+  if(method==='random') return pickRandom(allIdx,n);
+  if(method==='strat'){const k=alloc(n);return hoodIdx.flatMap((ix,i)=>pickRandom(ix,k[i]))}
+  const w=W[method];
+  for(let i=0;i<N;i++) keys[i]=Math.log(Math.random())/w[i];
+  return allIdx.slice().sort((a,b)=>keys[b]-keys[a]).slice(0,n);
+}
+const est = s => s.reduce((a,i)=>a+yesArr[i],0)/s.length;
+const pct = (v,d=1) => (v*100).toFixed(d)+'%';
+const signed = (v) => (v>=0?'+':'−')+Math.abs(v*100).toFixed(1);
+
+/* ---------- Canvas helper ---------- */
+function setup(cv,h){
+  const w=cv.clientWidth||cv.parentElement.clientWidth; const dpr=window.devicePixelRatio||1;
+  cv.style.height=h+'px'; cv.width=Math.round(w*dpr); cv.height=Math.round(h*dpr);
+  const ctx=cv.getContext('2d'); ctx.setTransform(dpr,0,0,dpr,0,0); return {ctx,w,h};
+}
+
+/* ---------- Hero ---------- */
+const heroSel=new Set(pickRandom(allIdx,90).filter(i=>people[i].r<18));
+function drawHero(){
+  const cv=document.getElementById('heroCanvas'); const w=cv.parentElement.clientWidth-34; cv.style.width=w+'px';
+  const cell=w/COLS; const rows=18; const {ctx}=setup(cv,cell*rows);
+  const yes=css('--yes'),no=css('--no'),ink=css('--ink');
+  for(const i of allIdx){const p=people[i]; if(p.r>=rows)continue;
+    const x=(COLS-1-p.c+.5)*cell,y=(p.r+.5)*cell, s=heroSel.has(i);
+    ctx.globalAlpha=s?1:.45; ctx.fillStyle=p.yes?yes:no; ctx.beginPath();ctx.arc(x,y,cell*.3,0,7);ctx.fill();
+    if(s){ctx.globalAlpha=1;ctx.strokeStyle=ink;ctx.lineWidth=1.4;ctx.beginPath();ctx.arc(x,y,cell*.46,0,7);ctx.stroke()}
+  }
+  ctx.globalAlpha=1;
+}
+
+/* ---------- Simulation 1 ---------- */
+let m1='random', cur=[];
+const n1=document.getElementById('n1');
+function chips(el,sel,onPick){
+  el.innerHTML='';
+  for(const k in METHODS){const b=document.createElement('button');b.type='button';b.className='chip';b.textContent=METHODS[k].label;b.dataset.k=k;b.setAttribute('aria-pressed',k===sel);
+    b.onclick=()=>{el.querySelectorAll('.chip').forEach(c=>c.setAttribute('aria-pressed',c===b));onPick(k)};el.appendChild(b)}
+}
+chips(document.getElementById('m1'),m1,k=>{m1=k;run1()});
+function run1(){
+  const n=+n1.value; document.getElementById('n1-val').textContent=n+' תושבים';
+  document.getElementById('m1-note').textContent=METHODS[m1].note;
+  cur=sample(m1,n);
+  const e=est(cur), err=e-TRUTH;
+  document.getElementById('r-true').textContent=pct(TRUTH);
+  document.getElementById('r-est').textContent=pct(e);
+  const re=document.getElementById('r-err'); re.textContent=signed(err)+' נק׳';
+  re.className='v num '+(Math.abs(err)>.08?'bad':Math.abs(err)<.04?'good':'');
+  // composition
+  const cnt=HOODS.map(()=>0); cur.forEach(i=>cnt[people[i].h]++);
+  document.getElementById('comp').innerHTML=HOODS.map((H,i)=>{
+    const pop=hoodIdx[i].length/N, s=cnt[i]/cur.length;
+    return `<div class="comp-row"><span>${H.name}</span><div class="bars">
+      <div class="bar-line"><div class="bar" style="width:${pop*100*2}%"></div><span class="bar-val">${Math.round(pop*100)}%</span></div>
+      <div class="bar-line"><div class="bar s" style="width:${Math.min(s*100*2,100)}%"></div><span class="bar-val">${Math.round(s*100)}%</span></div>
+    </div></div>`}).join('');
+  drawCity();
+}
+function drawCity(){
+  const cv=document.getElementById('city'); const w=cv.parentElement.clientWidth; const cell=w/COLS; const top=26;
+  const {ctx}=setup(cv,top+cell*ROWS);
+  const yes=css('--yes'),no=css('--no'),ink=css('--ink'),band=css('--band'),muted=css('--muted'),acc=css('--accent'),line=css('--line');
+  ctx.direction='rtl'; ctx.textAlign='center'; ctx.textBaseline='middle';
+  HOODS.forEach((H,i)=>{const x=(COLS-H.c1)*cell, bw=(H.c1-H.c0)*cell;
+    if(i%2===0){ctx.fillStyle=band;ctx.fillRect(x,top,bw,cell*ROWS)}
+    ctx.fillStyle=muted; ctx.font=`600 ${w<500?11:13}px Assistant, sans-serif`; ctx.fillText(w<640?H.short:H.name,x+bw/2,top/2);
+    ctx.strokeStyle=line;ctx.lineWidth=1;ctx.beginPath();ctx.moveTo(x,top);ctx.lineTo(x,top+cell*ROWS);ctx.stroke();
+  });
+  const sel=new Set(cur);
+  people.forEach((p,i)=>{
+    const x=(COLS-1-p.c+.5)*cell,y=top+(p.r+.5)*cell,s=sel.has(i);
+    ctx.globalAlpha=s?1:.3; ctx.fillStyle=p.yes?yes:no; ctx.beginPath();ctx.arc(x,y,cell*.3,0,7);ctx.fill();
+    if(s){ctx.globalAlpha=1;ctx.strokeStyle=ink;ctx.lineWidth=1.4;ctx.beginPath();ctx.arc(x,y,cell*.46,0,7);ctx.stroke()}
+  });
+  ctx.globalAlpha=1;
+  if(m1==='conv'){const x=(COLS-1-MALL.col+.5)*cell,y=top+(MALL.row+.5)*cell,s=Math.max(cell*.9,10);
+    ctx.fillStyle=acc;ctx.fillRect(x-s/2,y-s/2,s,s);ctx.fillStyle=ink;ctx.font='700 12px Assistant, sans-serif';
+    ctx.fillStyle=css('--surface');ctx.fillRect(x-22,y+s/2+2,44,16);ctx.fillStyle=acc;ctx.fillText('קניון',x,y+s/2+10)}
+}
+n1.addEventListener('input',run1);
+document.getElementById('draw1').onclick=run1;
+
+/* ---------- Simulation 2 ---------- */
+let m2='random', hist=null, ghost=null, ests=[], anim=0;
+const LO=.30, HI=.95, BINS=65;
+const n2=document.getElementById('n2');
+chips(document.getElementById('m2'),m2,k=>{m2=k});
+function upd2(){document.getElementById('n2-val').textContent=n2.value+' תושבים'}
+n2.addEventListener('input',upd2);
+function binOf(v){return Math.max(0,Math.min(BINS-1,Math.floor((v-LO)/(HI-LO)*BINS)))}
+function run2(animate){
+  cancelAnimationFrame(anim);
+  if(hist && ests.length) ghost=hist.slice();
+  hist=new Array(BINS).fill(0); ests=[];
+  const n=+n2.value, m=m2, TOTAL=1000;
+  const step=()=>{
+    const k=animate&&!reduce?40:TOTAL;
+    for(let j=0;j<k&&ests.length<TOTAL;j++){const e=est(sample(m,n));ests.push(e);hist[binOf(e)]++}
+    drawHist(); stats2();
+    if(ests.length<TOTAL) anim=requestAnimationFrame(step);
+  };
+  step();
+}
+function stats2(){
+  if(!ests.length)return;
+  const mean=ests.reduce((a,b)=>a+b,0)/ests.length, s=ests.slice().sort((a,b)=>a-b);
+  const q=p=>s[Math.min(s.length-1,Math.floor(p*s.length))];
+  document.getElementById('h-mean').textContent=pct(mean);
+  const b=document.getElementById('h-bias'); b.textContent=signed(mean-TRUTH)+' נק׳';
+  b.className='v num '+(Math.abs(mean-TRUTH)>.03?'bad':'good');
+  document.getElementById('h-range').textContent=pct(q(.025),0)+' – '+pct(q(.975),0);
+}
+function drawHist(){
+  const cv=document.getElementById('hist'); const w=cv.parentElement.clientWidth; const h=Math.max(240,Math.min(340,w*.5));
+  const {ctx}=setup(cv,h);
+  const padL=12,padR=12,padT=28,padB=30, pw=w-padL-padR, ph=h-padT-padB;
+  const yes=css('--yes'),muted=css('--muted'),acc=css('--accent'),line=css('--line');
+  const mx=Math.max(1,...(hist||[0]),...(ghost||[0]));
+  // x mapped RTL? keep numeric axis left→right as in math convention
+  const X=v=>padL+(v-LO)/(HI-LO)*pw, bw=pw/BINS;
+  ctx.strokeStyle=line;ctx.lineWidth=1;ctx.font='12px "IBM Plex Mono", monospace';ctx.fillStyle=muted;ctx.textAlign='center';ctx.textBaseline='top';
+  for(let t=.3;t<=.951;t+=.1){const x=X(t);ctx.beginPath();ctx.moveTo(x,padT);ctx.lineTo(x,padT+ph);ctx.globalAlpha=.6;ctx.stroke();ctx.globalAlpha=1;ctx.fillText(Math.round(t*100)+'%',x,padT+ph+8)}
+  ctx.beginPath();ctx.moveTo(padL,padT+ph);ctx.lineTo(padL+pw,padT+ph);ctx.stroke();
+  if(hist){ctx.fillStyle=yes;hist.forEach((c,i)=>{if(!c)return;const bh=c/mx*ph;ctx.fillRect(padL+i*bw+.5,padT+ph-bh,bw-1,bh)})}
+  if(ghost){ctx.strokeStyle=muted;ctx.lineWidth=1.5;ctx.beginPath();ctx.moveTo(padL,padT+ph);
+    ghost.forEach((c,i)=>{const y=padT+ph-c/mx*ph;ctx.lineTo(padL+i*bw,y);ctx.lineTo(padL+(i+1)*bw,y)});ctx.lineTo(padL+pw,padT+ph);ctx.stroke()}
+  const tx=X(TRUTH);ctx.strokeStyle=acc;ctx.lineWidth=2.5;ctx.beginPath();ctx.moveTo(tx,padT-6);ctx.lineTo(tx,padT+ph);ctx.stroke();
+  ctx.fillStyle=acc;ctx.font='700 12px Assistant, sans-serif';ctx.textBaseline='bottom';ctx.direction='rtl';ctx.fillText('האמת '+pct(TRUTH),tx,padT-8);
+}
+document.getElementById('run2').onclick=()=>run2(true);
+
+/* ---------- Quiz ---------- */
+const Q=[
+  ['כדי לבדוק שביעות רצון בבית ספר, הוגרלו 60 תלמידים מתוך רשימת כל התלמידים.',true,'כל תלמיד היה ברשימה וקיבל סיכוי שווה. זו דגימה אקראית פשוטה.'],
+  ['תוכנית טלוויזיה ביקשה מהצופים להצביע ב-SMS. 80% מהמצביעים תמכו בחוק.',false,'מדגם מתנדבים. רק צופי התוכנית, ורק מי שטרח לשלוח הודעה. בדרך כלל אלה בעלי דעה חזקה.'],
+  ['כדי לאמוד את הגובה הממוצע של מבוגרים בישראל נמדדו 500 שחקני כדורסל.',false,'הקבוצה שונה מהאוכלוסייה בדיוק בתכונה שנמדדת. גודל המדגם לא עוזר כאן.'],
+  ['חברת סקרים חילקה את המדינה לפי אזור וקבוצת גיל, והגרילה משתתפים מכל קבוצה לפי גודלה היחסי.',true,'זו דגימת שכבות. היא מבטיחה שהרכב המדגם יתאים לאוכלוסייה במשתנים החשובים.'],
+  ['סקר על הרגלי שינה נערך בטלפון הביתי בימי חול בשעה 10 בבוקר.',false,'כיסוי חסר. מי שעובד מחוץ לבית, או שאין לו טלפון קווי, כמעט לא יכול להיכנס למדגם.'],
+];
+let answered=0, right=0;
+const quiz=document.getElementById('quiz');
+Q.forEach(([txt,ans,exp],qi)=>{
+  const d=document.createElement('div');d.className='q';
+  d.innerHTML=`<p>${txt}</p><div class="qbtns"><button type="button" class="qbtn" data-v="1">מייצג</button><button type="button" class="qbtn" data-v="0">לא מייצג</button></div><p class="qexp" hidden></p>`;
+  const ex=d.querySelector('.qexp');
+  d.querySelectorAll('.qbtn').forEach(b=>b.onclick=()=>{
+    if(d.dataset.done)return; d.dataset.done=1; answered++;
+    const ok=(b.dataset.v==='1')===ans; if(ok)right++;
+    b.classList.add(ok?'right':'wrong');
+    if(!ok)d.querySelector(`.qbtn[data-v="${ans?1:0}"]`).classList.add('right');
+    ex.textContent=(ok?'נכון. ':'לא בדיוק. ')+exp; ex.hidden=false;
+    document.getElementById('score').textContent=`ענית על ${answered} מתוך ${Q.length} · ${right} נכונות`;
+  });
+  quiz.appendChild(d);
+});
+
+/* ---------- Boot & theme ---------- */
+function redrawAll(){drawHero();drawCity();drawHist()}
+run1(); upd2(); run2(false); drawHero();
+let rt; addEventListener('resize',()=>{clearTimeout(rt);rt=setTimeout(redrawAll,120)});
+matchMedia('(prefers-color-scheme: dark)').addEventListener('change',redrawAll);
+new MutationObserver(redrawAll).observe(document.documentElement,{attributes:true,attributeFilter:['data-theme']});
+document.fonts && document.fonts.ready.then(redrawAll);
+})();
+</script>
